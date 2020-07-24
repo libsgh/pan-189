@@ -1,0 +1,25 @@
+name: Refresh-Data
+on:
+  schedule:
+    - cron: 0/30 * * * *
+  watch:
+    types: [started]
+jobs:
+  build:
+    strategy:
+      matrix:
+        go-version: [1.14.x]
+        platform: [ubuntu-latest]
+    runs-on: ${{ matrix.platform }}
+    if: github.event.repository.owner.id == github.event.sender.id
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go-version }}
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: refresh-data
+        env:
+          CONFIG: ${{ secrets.CONFIG }}
+        run: go run main.go
