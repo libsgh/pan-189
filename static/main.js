@@ -47,6 +47,10 @@ function initTable(path) {
                     }else{
                         a = path + "/" + item["fileName"];
                     }
+                }else{
+                    if(item["mediaType"] == 1 || item["mediaType"] == 3){
+                        a = "javascript:view(this,'"+item["downloadUrl"]+"','"+item["icon"]["largeUrl"]+"');";
+                    }
                 }
                 html+="<tr>"+
                     "    <td class=\"file-name\"><a class=\"icon "+style+"\" href=\""+a+"\">"+item["fileName"]+""+n+"</a></td>"+
@@ -68,4 +72,13 @@ function searchItem(path, data, items) {
              }
         }
     });
+}
+function view(obj, src, thumb) {
+    $(obj).lightGallery({
+        dynamic: true,
+        dynamicEl: [{
+            "src": src,
+            'thumb': thumb
+        }]
+    })
 }
