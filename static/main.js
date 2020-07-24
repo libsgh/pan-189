@@ -1,7 +1,6 @@
 $(function(){
     var path = window.location.pathname;
     path = decodeURIComponent(path);
-    path="/123"
     initTable(path);
 });
 function getParentPath(path) {
