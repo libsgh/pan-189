@@ -42,7 +42,11 @@ function initTable(path) {
                 if(item["isFolder"]){
                     style = "icon-dir";
                     n = "/";
-                    a = path + "/" + item["fileName"];
+                    if(path == "/"){
+                        a = "/" + item["fileName"];
+                    }else{
+                        a = path + "/" + item["fileName"];
+                    }
                 }
                 html+="<tr>"+
                     "    <td class=\"file-name\"><a class=\"icon "+style+"\" href=\""+a+"\">"+item["fileName"]+""+n+"</a></td>"+
