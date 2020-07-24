@@ -1,6 +1,7 @@
 $(function(){
     var path = window.location.pathname;
     path = decodeURIComponent(path);
+    path="/123"
     initTable(path);
 });
 function getParentPath(path) {
@@ -30,7 +31,7 @@ function initTable(path) {
     }
     $.ajax({
         method: 'GET',
-        url: '/data/data.json',
+        url: 'data/data.json',
         success: function (data) {
             var html = "";
             var items = [];
@@ -48,8 +49,10 @@ function initTable(path) {
                         a = path + "/" + item["fileName"];
                     }
                 }else{
-                    if(item["mediaType"] == 1 || item["mediaType"] == 3){
-                        a = "javascript:view(this,'"+item["downloadUrl"]+"','"+item["icon"]["largeUrl"]+"');";
+                    if(item["mediaType"] == 1){
+                        a = "javascript:viewImg(this,'"+item["downloadUrl"]+"','"+item["icon"]["largeUrl"]+"','"+ item["fileName"]+"');";
+                    }else if(item["mediaType"] == 3){
+                        a = "javascript:viewVideo(this,'"+item["downloadUrl"]+"','"+item["icon"]["largeUrl"]+"','"+ item["fileName"]+"','"+item["fileType"]+"');";
                     }
                 }
                 html+="<tr>"+
@@ -73,12 +76,24 @@ function searchItem(path, data, items) {
         }
     });
 }
-function view(obj, src, thumb) {
+function viewImg(obj, src, thumb, title) {
     $(obj).lightGallery({
         dynamic: true,
         dynamicEl: [{
             "src": src,
-            'thumb': thumb
+            "thumb": thumb,
+            "subHtml": "<h4>"+title+"</h4>"
+        }]
+    })
+}function viewVideo(obj, src, thumb, title, fileType) {
+    $(obj).lightGallery({
+        fullScreen: true,
+        videojs :true,
+        dynamic: true,
+        dynamicEl: [{
+            "html": '<video class="lg-video-object lg-html5 video-js vjs-default-skin" controls preload="none"><source src="'+src+'" type="video/'+fileType+'">Your browser does not support HTML5 video</video>',
+            "thumb": thumb,
+            "subHtml": "<h4>"+title+"</h4>"
         }]
     })
 }
