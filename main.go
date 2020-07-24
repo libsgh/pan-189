@@ -22,6 +22,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func main() {
@@ -31,16 +32,76 @@ func main() {
 }
 func run(config *Config) {
 	cookie := login(config.UserPwd)
-	fns := GetFiles(config.RootFileId, cookie)
+	fns := GetFiles(config.RootFileId, config.RootFileId, cookie)
 	json, _ := jsoniter.MarshalToString(fns)
 	if len(fns) > 0 {
 		log.Println(">> 数据获取成功：" + strconv.Itoa(len(json)))
 	} else {
 		log.Println(">> 数据获取失败：" + strconv.Itoa(len(json)))
 	}
+	//ioutil.WriteFile("/home/single/Desktop/data.json", []byte(json), 0644)
 	pushToGithub("data/data.json", json, config.GhToken)
+	//签到、抽奖
+	DayTask(cookie)
 }
-func GetFiles(fileId, cookie string) []FileNode {
+func DayTask(cookie string) {
+	rand := strconv.FormatInt(time.Now().UnixNano()/1e6, 10)
+	surl := "https://api.cloud.189.cn/mkt/userSign.action?rand=" + rand + "&clientType=TELEANDROID&version=8.6.3&model=SM-G930K"
+	url := "https://m.cloud.189.cn/v2/drawPrizeMarketDetails.action?taskId=TASK_SIGNIN&activityId=ACT_SIGNIN"
+	url2 := "https://m.cloud.189.cn/v2/drawPrizeMarketDetails.action?taskId=TASK_SIGNIN_PHOTOS&activityId=ACT_SIGNIN"
+	resp, err := nic.Get(surl, nic.H{
+		Cookies: nic.KV{
+			"COOKIE_LOGIN_USER": cookie,
+		},
+		Headers: nic.KV{
+			"User-Agent":      "Mozilla/5.0 (Linux; Android 5.1.1; SM-G930K Build/NRD90M; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/74.0.3729.136 Mobile Safari/537.36 Ecloud/8.6.3 Android/22 clientId/355325117317828 clientModel/SM-G930K imsi/460071114317824 clientChannelId/qq proVersion/1.0.6",
+			"Referer":         "https://m.cloud.189.cn/zhuanti/2016/sign/index.jsp?albumBackupOpened=1",
+			"Host":            "m.cloud.189.cn",
+			"Accept-Encoding": "gzip, deflate",
+		},
+	})
+	netdiskBonus := jsoniter.Get([]byte(resp.Text), "netdiskBonus").ToString()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	if jsoniter.Get([]byte(resp.Text), "isSign").ToString() == "false" {
+		log.Println(">> 未签到，签到获得" + netdiskBonus + "M空间")
+	} else {
+		log.Println(">> 已经签到过了，签到获得" + netdiskBonus + "M空间")
+	}
+	headers := nic.KV{
+		"User-Agent":      "Mozilla/5.0 (Linux; Android 5.1.1; SM-G930K Build/NRD90M; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/74.0.3729.136 Mobile Safari/537.36 Ecloud/8.6.3 Android/22 clientId/355325117317828 clientModel/SM-G930K imsi/460071114317824 clientChannelId/qq proVersion/1.0.6",
+		"Referer":         "https://m.cloud.189.cn/zhuanti/2016/sign/index.jsp?albumBackupOpened=1",
+		"Host":            "m.cloud.189.cn",
+		"Accept-Encoding": "gzip, deflate",
+	}
+	resp2, _ := nic.Get(url, nic.H{
+		Cookies: nic.KV{
+			"COOKIE_LOGIN_USER": cookie,
+		},
+		Headers: headers,
+	})
+	if strings.Contains(resp2.Text, "User_Not_Chance") {
+		log.Println(">> 已经抽奖过了，今天已经没有机会")
+	} else {
+		description := jsoniter.Get([]byte(resp2.Text), "description").ToString()
+		log.Println(">> 抽奖获得" + description)
+	}
+	resp3, _ := nic.Get(url2, nic.H{
+		Cookies: nic.KV{
+			"COOKIE_LOGIN_USER": cookie,
+		},
+		Headers: headers,
+	})
+	if strings.Contains(resp3.Text, "User_Not_Chance") {
+		log.Println(">> 已经抽奖过了，今天已经没有机会")
+	} else {
+
+		description := jsoniter.Get([]byte(resp3.Text), "description").ToString()
+		log.Println(">> 抽奖获得" + description)
+	}
+}
+func GetFiles(rootId, fileId, cookie string) []FileNode {
 	fns := make([]FileNode, 0)
 	pageNum := 1
 	for {
@@ -64,10 +125,17 @@ func GetFiles(fileId, cookie string) []FileNode {
 		if err == nil {
 			for _, item := range ps {
 				if flag == true && item.FileName != "全部文件" {
-					p += "/" + item.FileName
+					if strings.HasSuffix(p, "/") != true {
+						p += "/" + item.FileName
+					} else {
+						p += item.FileName
+					}
 				}
-				if item.FileId == fileId {
+				if item.FileId == rootId {
 					flag = true
+				}
+				if flag == true && item.FileName == "全部文件" {
+					p += "/"
 				}
 			}
 		}
@@ -79,7 +147,7 @@ func GetFiles(fileId, cookie string) []FileNode {
 				for _, item := range m {
 					item.Path = p
 					if item.IsFolder == true {
-						item.Children = GetFiles(item.FileId, cookie)
+						item.Children = GetFiles(rootId, item.FileId, cookie)
 					}
 					fns = append(fns, item)
 				}
@@ -123,7 +191,7 @@ type Icon struct {
 
 //天翼云网盘登录，返回login—cookie
 func login(userPwd string) string {
-	session := nic.Session{}
+	var session = nic.Session{}
 	userPwdArr := strings.Split(userPwd, " ")
 	user := userPwdArr[0]
 	password := userPwdArr[1]
