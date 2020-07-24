@@ -124,7 +124,7 @@ func GetFiles(rootId, fileId, cookie string) []FileNode {
 		flag := false
 		if err == nil {
 			for _, item := range ps {
-				if flag == true && item.FileName != "全部文件" {
+				if flag == true && item.FileId != rootId {
 					if strings.HasSuffix(p, "/") != true {
 						p += "/" + item.FileName
 					} else {
@@ -134,7 +134,7 @@ func GetFiles(rootId, fileId, cookie string) []FileNode {
 				if item.FileId == rootId {
 					flag = true
 				}
-				if flag == true && item.FileName == "全部文件" {
+				if flag == true && item.FileId == rootId {
 					p += "/"
 				}
 			}
