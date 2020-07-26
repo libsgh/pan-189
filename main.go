@@ -18,12 +18,15 @@ import (
 	"golang.org/x/oauth2"
 	"gopkg.in/yaml.v2"
 	"log"
+	math_rand "math/rand"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 )
+
+var session = nic.Session{}
 
 func main() {
 	conf := os.Getenv("CONFIG")
@@ -32,8 +35,9 @@ func main() {
 }
 func run(config *Config) {
 	cookie := login(config.UserPwd)
-	fns := GetFiles(config.RootFileId, config.RootFileId, cookie)
+	fns := GetFiles(config.RootFileId, config.RootFileId)
 	json, _ := jsoniter.MarshalToString(fns)
+	fmt.Println(json)
 	if len(fns) > 0 {
 		log.Println(">> 数据获取成功：" + strconv.Itoa(len(json)))
 	} else {
@@ -101,16 +105,15 @@ func DayTask(cookie string) {
 		log.Println(">> 抽奖获得" + description)
 	}
 }
-func GetFiles(rootId, fileId, cookie string) []FileNode {
+func random() string {
+	return fmt.Sprintf("0.%17v", math_rand.New(math_rand.NewSource(time.Now().UnixNano())).Int63n(100000000000000000))
+}
+func GetFiles(rootId, fileId string) []FileNode {
 	fns := make([]FileNode, 0)
 	pageNum := 1
 	for {
-		url := fmt.Sprintf("https://cloud.189.cn/v2/listFiles.action?fileId=%s&mediaType=&keyword=&inGroupSpace=false&orderBy=3&order=DESC&pageNum=%d&pageSize=100", fileId, pageNum)
-		resp, err := nic.Get(url, nic.H{
-			Cookies: nic.KV{
-				"COOKIE_LOGIN_USER": cookie,
-			},
-		})
+		url := fmt.Sprintf("https://cloud.189.cn/v2/listFiles.action?fileId=%s&mediaType=&keyword=&inGroupSpace=false&orderBy=3&order=DESC&pageNum=%d&pageSize=100&noCache=%s", fileId, pageNum, random())
+		resp, err := session.Get(url, nil)
 		if err != nil {
 			log.Fatal(err.Error())
 		}
@@ -147,7 +150,7 @@ func GetFiles(rootId, fileId, cookie string) []FileNode {
 				for _, item := range m {
 					item.Path = p
 					if item.IsFolder == true {
-						item.Children = GetFiles(rootId, item.FileId, cookie)
+						item.Children = GetFiles(rootId, item.FileId)
 					}
 					fns = append(fns, item)
 				}
@@ -189,9 +192,8 @@ type Icon struct {
 	SmallUrl string `json:"smallUrl"`
 }
 
-//天翼云网盘登录，返回login—cookie
+//天翼云网盘登录
 func login(userPwd string) string {
-	var session = nic.Session{}
 	userPwdArr := strings.Split(userPwd, " ")
 	user := userPwdArr[0]
 	password := userPwdArr[1]
