@@ -48,11 +48,12 @@ function initTable(path) {
                         a = path + "/" + item["fileName"];
                     }
                 }else{
-                    if(item["mediaType"] == 1){
-                        a = "javascript:viewImg(this,'"+item["downloadUrl"]+"','"+item["icon"]["largeUrl"]+"','"+ item["fileName"]+"');";
+                    /*if(item["mediaType"] == 1){
+                        a = "javascript:viewImg(this,'"+window.btoa(item["downloadUrl"])+"','"+window.btoa(item["icon"]["largeUrl"])+"','"+ item["fileName"]+"','"+item["fileId"]+"');";
                     }else if(item["mediaType"] == 3){
-                        a = "javascript:viewVideo(this,'"+item["downloadUrl"]+"','"+item["icon"]["largeUrl"]+"','"+ item["fileName"]+"','"+item["fileType"]+"');";
-                    }
+                        console.log(item["downloadUrl"]);
+                        a = "javascript:viewVideo(this,'"+window.btoa(item["downloadUrl"])+"','"+window.btoa(item["icon"]["largeUrl"])+"','"+ item["fileName"]+"','"+item["fileType"]+"');";
+                    }*/
                 }
                 html+="<tr>"+
                     "    <td class=\"file-name\"><a class=\"icon "+style+"\" href=\""+a+"\">"+item["fileName"]+""+n+"</a></td>"+
@@ -75,23 +76,25 @@ function searchItem(path, data, items) {
         }
     });
 }
-function viewImg(obj, src, thumb, title) {
+function viewImg(obj, src, thumb, title, fileId) {
     $(obj).lightGallery({
+        galleryId: 2,
         dynamic: true,
         dynamicEl: [{
-            "src": src,
-            "thumb": thumb,
+            "src": window.atob(src),
+            "thumb": window.atob(thumb),
             "subHtml": "<h4>"+title+"</h4>"
         }]
     })
-}function viewVideo(obj, src, thumb, title, fileType) {
+}
+function viewVideo(obj, src, thumb, title, fileType) {
     $(obj).lightGallery({
+        galleryId: 1,
         fullScreen: true,
         videojs :true,
         dynamic: true,
         dynamicEl: [{
-            "html": '<video class="lg-video-object lg-html5 video-js vjs-default-skin" controls preload="none"><source src="'+src+'" type="video/'+fileType+'">Your browser does not support HTML5 video</video>',
-            "thumb": thumb,
+            "html": '<video class="lg-video-object lg-html5 video-js vjs-default-skin" controls preload="none"><source src="'+window.atob(src)+'" type="video/'+fileType+'">Your browser does not support HTML5 video</video>',
             "subHtml": "<h4>"+title+"</h4>"
         }]
     })
