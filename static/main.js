@@ -30,7 +30,7 @@ function initTable(path) {
     }
     $.ajax({
         method: 'GET',
-        url: 'data/data.json',
+        url: '/data/data.json',
         success: function (data) {
             var html = "";
             var items = [];
