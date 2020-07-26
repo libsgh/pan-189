@@ -1,7 +1,15 @@
 $(function(){
     var path = window.location.pathname;
     path = decodeURIComponent(path);
-    initTable(path);
+    var m = path.split("/").slice(0);
+    var nm = [];
+    $.each(m, function(i, t) {
+        if(t == "" && i == m.length-1){
+        }else{
+            nm.push(t);
+        }
+    });
+    initTable(nm.join("/"));
 });
 function getParentPath(path) {
     var m = path.split("/").slice(0);
@@ -101,13 +109,13 @@ function viewVideo(obj, src, thumb, title, fileType) {
 }
 function renderSize(value){
     if(null==value||value==''){
-        return "0 Bytes";
+        return "0 B";
     }
-    var unitArr = new Array("Bytes","KB","MB","GB","TB","PB","EB","ZB","YB");
+    var unitArr = new Array("B","KB","MB","GB","TB","PB","EB","ZB","YB");
     var index=0;
     var srcsize = parseFloat(value);
     index=Math.floor(Math.log(srcsize)/Math.log(1024));
     var size =srcsize/Math.pow(1024,index);
     size=size.toFixed(2);//保留的小数位数
-    return size+unitArr[index];
+    return size+" "+unitArr[index];
 }
