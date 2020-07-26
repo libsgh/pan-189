@@ -1,7 +1,7 @@
 name: Refresh-Data
 on:
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '12 */6 * * *'
   watch:
     types: [started]
 jobs:
