@@ -1,15 +1,19 @@
 $(function(){
     var path = window.location.pathname;
     path = decodeURIComponent(path);
-    var m = path.split("/").slice(0);
-    var nm = [];
-    $.each(m, function(i, t) {
-        if(t == "" && i == m.length-1){
-        }else{
-            nm.push(t);
-        }
-    });
-    initTable(nm.join("/"));
+    if(path != "" && path != "/"){
+        var m = path.split("/").slice(0);
+        var nm = [];
+        $.each(m, function(i, t) {
+            if(t == "" && i == m.length-1){
+            }else{
+                nm.push(t);
+            }
+        });
+        initTable(nm.join("/"));
+    }else{
+        initTable(path);
+    }
 });
 function getParentPath(path) {
     var m = path.split("/").slice(0);
