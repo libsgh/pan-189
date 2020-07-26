@@ -37,7 +37,6 @@ func run(config *Config) {
 	cookie := login(config.UserPwd)
 	fns := GetFiles(config.RootFileId, config.RootFileId)
 	json, _ := jsoniter.MarshalToString(fns)
-	fmt.Println(json)
 	if len(fns) > 0 {
 		log.Println(">> 数据获取成功：" + strconv.Itoa(len(json)))
 	} else {
