@@ -33,6 +33,7 @@ func main() {
 	config := ReadYamlConfig(conf)
 	run(config)
 }
+
 func run(config *Config) {
 	cookie := login(config.UserPwd)
 	fns := GetFiles(config.RootFileId, config.RootFileId)
@@ -47,6 +48,8 @@ func run(config *Config) {
 	//签到、抽奖
 	DayTask(cookie)
 }
+
+//每日任务
 func DayTask(cookie string) {
 	rand := strconv.FormatInt(time.Now().UnixNano()/1e6, 10)
 	surl := "https://api.cloud.189.cn/mkt/userSign.action?rand=" + rand + "&clientType=TELEANDROID&version=8.6.3&model=SM-G930K"
@@ -104,9 +107,13 @@ func DayTask(cookie string) {
 		log.Println(">> 抽奖获得" + description)
 	}
 }
+
+//获取随机数
 func random() string {
 	return fmt.Sprintf("0.%17v", math_rand.New(math_rand.NewSource(time.Now().UnixNano())).Int63n(100000000000000000))
 }
+
+//获取文件列表
 func GetFiles(rootId, fileId string) []FileNode {
 	fns := make([]FileNode, 0)
 	pageNum := 1
@@ -150,6 +157,16 @@ func GetFiles(rootId, fileId string) []FileNode {
 					item.Path = p
 					if item.IsFolder == true {
 						item.Children = GetFiles(rootId, item.FileId)
+					} else {
+						//如果是文件，解析下载直链
+						dRedirectRep, _ := session.Get("https://cloud.189.cn/downloadFile.action?fileStr="+item.FileIdDigest+"&downloadType=1", nic.H{
+							AllowRedirect: false,
+						})
+						redirectUrl := dRedirectRep.Header.Get("Location")
+						dRedirectRep, _ = session.Get(redirectUrl, nic.H{
+							AllowRedirect: false,
+						})
+						item.DownloadUrl = dRedirectRep.Header.Get("Location")
 					}
 					fns = append(fns, item)
 				}
