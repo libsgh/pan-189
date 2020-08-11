@@ -32,6 +32,7 @@ func main() {
 	conf := os.Getenv("CONFIG")
 	config := ReadYamlConfig(conf)
 	run(config)
+
 }
 
 func run(config *Config) {

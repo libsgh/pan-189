@@ -113,7 +113,7 @@ function viewVideo(obj, src, thumb, title, fileType) {
 }
 function renderSize(value){
     if(null==value||value==''){
-        return "0 B";
+        return "-";
     }
     var unitArr = new Array("B","KB","MB","GB","TB","PB","EB","ZB","YB");
     var index=0;
